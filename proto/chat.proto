@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option go_package = ".;proxygrpc";
+option java_multiple_files = true;
+option java_package = "com.chubanova";
+option java_outer_classname = "MessangerProto";
+
+package messanger;
+
+service Messanger {
+
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponce) {}
+
+  rpc JoinChannel(JoinChannelRequest) returns (stream ChannelMessage) {}
+
+  rpc StartChannel(stream StartChannelRequest) returns (StartChannelResponce) {}
+
+  rpc JoinChat(stream Chat) returns (stream Chat) {}
+}
+
+
+message GetInfoRequest{
+    string keyword = 1;
+}
+
+message GetInfoResponce{
+    repeated ChannelInfo channelInfo = 1;
+}
+
+message ChannelInfo{
+    int32 idChannel = 1;
+    int32 nameChannel = 2;
+    TypeChannel typeChannel = 3;
+    enum TypeChannel{
+        CHAT = 0;
+        CHANNEL = 1;
+    } 
+}
+
+message StartChannelRequest{
+    ChannelInfo info = 1;
+    ChannelMessage text = 2;
+}
+
+message JoinChannelRequest {
+    int32 idChannel = 1;
+
+}
+
+message StartChannelResponce{
+    string status = 1;
+
+}
+
+message ChannelMessage {
+    string message = 1;
+}
+
+message Chat{
+    ChannelInfo info = 1;
+    string name = 2;
+    string text = 3;
+}
+
+

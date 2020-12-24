@@ -1,0 +1,23 @@
+
+syntax = "proto3";
+
+import "chat.proto";
+
+option go_package = ".;proxygrpc";
+option java_multiple_files = true;
+option java_package = "com.chubanova";
+option java_outer_classname = "MessangerProto";
+
+package proxy;
+
+service MessangerProxy {
+
+  rpc GetInfo(messanger.GetInfoRequest) returns (messanger.GetInfoResponce) {}
+
+  rpc JoinChannel(messanger.JoinChannelRequest) returns (stream messanger.ChannelMessage) {}
+
+  rpc StartChannel(stream messanger.StartChannelRequest) returns (messanger.StartChannelResponce) {}
+
+  rpc JoinChat(stream messanger.Chat) returns (stream messanger.Chat) {}
+}
+
