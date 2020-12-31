@@ -7,6 +7,10 @@
 package proxygrpc
 
 import (
+	context "context"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -97,4 +101,286 @@ func file_proxy_proto_init() {
 	file_proxy_proto_rawDesc = nil
 	file_proxy_proto_goTypes = nil
 	file_proxy_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// MessangerProxyClient is the client API for MessangerProxy service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MessangerProxyClient interface {
+	GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponce, error)
+	JoinChannel(ctx context.Context, in *JoinChannelRequest, opts ...grpc.CallOption) (MessangerProxy_JoinChannelClient, error)
+	StartChannel(ctx context.Context, opts ...grpc.CallOption) (MessangerProxy_StartChannelClient, error)
+	JoinChat(ctx context.Context, opts ...grpc.CallOption) (MessangerProxy_JoinChatClient, error)
+}
+
+type messangerProxyClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMessangerProxyClient(cc grpc.ClientConnInterface) MessangerProxyClient {
+	return &messangerProxyClient{cc}
+}
+
+func (c *messangerProxyClient) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponce, error) {
+	out := new(GetInfoResponce)
+	err := c.cc.Invoke(ctx, "/proxy.MessangerProxy/GetInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messangerProxyClient) JoinChannel(ctx context.Context, in *JoinChannelRequest, opts ...grpc.CallOption) (MessangerProxy_JoinChannelClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MessangerProxy_serviceDesc.Streams[0], "/proxy.MessangerProxy/JoinChannel", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerProxyJoinChannelClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type MessangerProxy_JoinChannelClient interface {
+	Recv() (*ChannelMessage, error)
+	grpc.ClientStream
+}
+
+type messangerProxyJoinChannelClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerProxyJoinChannelClient) Recv() (*ChannelMessage, error) {
+	m := new(ChannelMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *messangerProxyClient) StartChannel(ctx context.Context, opts ...grpc.CallOption) (MessangerProxy_StartChannelClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MessangerProxy_serviceDesc.Streams[1], "/proxy.MessangerProxy/StartChannel", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerProxyStartChannelClient{stream}
+	return x, nil
+}
+
+type MessangerProxy_StartChannelClient interface {
+	Send(*StartChannelRequest) error
+	CloseAndRecv() (*StartChannelResponce, error)
+	grpc.ClientStream
+}
+
+type messangerProxyStartChannelClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerProxyStartChannelClient) Send(m *StartChannelRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *messangerProxyStartChannelClient) CloseAndRecv() (*StartChannelResponce, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(StartChannelResponce)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *messangerProxyClient) JoinChat(ctx context.Context, opts ...grpc.CallOption) (MessangerProxy_JoinChatClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MessangerProxy_serviceDesc.Streams[2], "/proxy.MessangerProxy/JoinChat", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerProxyJoinChatClient{stream}
+	return x, nil
+}
+
+type MessangerProxy_JoinChatClient interface {
+	Send(*Chat) error
+	Recv() (*Chat, error)
+	grpc.ClientStream
+}
+
+type messangerProxyJoinChatClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerProxyJoinChatClient) Send(m *Chat) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *messangerProxyJoinChatClient) Recv() (*Chat, error) {
+	m := new(Chat)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// MessangerProxyServer is the server API for MessangerProxy service.
+type MessangerProxyServer interface {
+	GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponce, error)
+	JoinChannel(*JoinChannelRequest, MessangerProxy_JoinChannelServer) error
+	StartChannel(MessangerProxy_StartChannelServer) error
+	JoinChat(MessangerProxy_JoinChatServer) error
+}
+
+// UnimplementedMessangerProxyServer can be embedded to have forward compatible implementations.
+type UnimplementedMessangerProxyServer struct {
+}
+
+func (*UnimplementedMessangerProxyServer) GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponce, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInfo not implemented")
+}
+func (*UnimplementedMessangerProxyServer) JoinChannel(*JoinChannelRequest, MessangerProxy_JoinChannelServer) error {
+	return status.Errorf(codes.Unimplemented, "method JoinChannel not implemented")
+}
+func (*UnimplementedMessangerProxyServer) StartChannel(MessangerProxy_StartChannelServer) error {
+	return status.Errorf(codes.Unimplemented, "method StartChannel not implemented")
+}
+func (*UnimplementedMessangerProxyServer) JoinChat(MessangerProxy_JoinChatServer) error {
+	return status.Errorf(codes.Unimplemented, "method JoinChat not implemented")
+}
+
+func RegisterMessangerProxyServer(s *grpc.Server, srv MessangerProxyServer) {
+	s.RegisterService(&_MessangerProxy_serviceDesc, srv)
+}
+
+func _MessangerProxy_GetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessangerProxyServer).GetInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proxy.MessangerProxy/GetInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessangerProxyServer).GetInfo(ctx, req.(*GetInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessangerProxy_JoinChannel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(JoinChannelRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(MessangerProxyServer).JoinChannel(m, &messangerProxyJoinChannelServer{stream})
+}
+
+type MessangerProxy_JoinChannelServer interface {
+	Send(*ChannelMessage) error
+	grpc.ServerStream
+}
+
+type messangerProxyJoinChannelServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerProxyJoinChannelServer) Send(m *ChannelMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _MessangerProxy_StartChannel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MessangerProxyServer).StartChannel(&messangerProxyStartChannelServer{stream})
+}
+
+type MessangerProxy_StartChannelServer interface {
+	SendAndClose(*StartChannelResponce) error
+	Recv() (*StartChannelRequest, error)
+	grpc.ServerStream
+}
+
+type messangerProxyStartChannelServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerProxyStartChannelServer) SendAndClose(m *StartChannelResponce) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *messangerProxyStartChannelServer) Recv() (*StartChannelRequest, error) {
+	m := new(StartChannelRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _MessangerProxy_JoinChat_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MessangerProxyServer).JoinChat(&messangerProxyJoinChatServer{stream})
+}
+
+type MessangerProxy_JoinChatServer interface {
+	Send(*Chat) error
+	Recv() (*Chat, error)
+	grpc.ServerStream
+}
+
+type messangerProxyJoinChatServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerProxyJoinChatServer) Send(m *Chat) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *messangerProxyJoinChatServer) Recv() (*Chat, error) {
+	m := new(Chat)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _MessangerProxy_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proxy.MessangerProxy",
+	HandlerType: (*MessangerProxyServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetInfo",
+			Handler:    _MessangerProxy_GetInfo_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "JoinChannel",
+			Handler:       _MessangerProxy_JoinChannel_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StartChannel",
+			Handler:       _MessangerProxy_StartChannel_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "JoinChat",
+			Handler:       _MessangerProxy_JoinChat_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "proxy.proto",
 }

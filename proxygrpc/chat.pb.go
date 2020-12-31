@@ -7,6 +7,10 @@
 package proxygrpc
 
 import (
+	context "context"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -720,4 +724,286 @@ func file_chat_proto_init() {
 	file_chat_proto_rawDesc = nil
 	file_chat_proto_goTypes = nil
 	file_chat_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// MessangerClient is the client API for Messanger service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MessangerClient interface {
+	GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponce, error)
+	JoinChannel(ctx context.Context, in *JoinChannelRequest, opts ...grpc.CallOption) (Messanger_JoinChannelClient, error)
+	StartChannel(ctx context.Context, opts ...grpc.CallOption) (Messanger_StartChannelClient, error)
+	JoinChat(ctx context.Context, opts ...grpc.CallOption) (Messanger_JoinChatClient, error)
+}
+
+type messangerClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMessangerClient(cc grpc.ClientConnInterface) MessangerClient {
+	return &messangerClient{cc}
+}
+
+func (c *messangerClient) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponce, error) {
+	out := new(GetInfoResponce)
+	err := c.cc.Invoke(ctx, "/messanger.Messanger/GetInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messangerClient) JoinChannel(ctx context.Context, in *JoinChannelRequest, opts ...grpc.CallOption) (Messanger_JoinChannelClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Messanger_serviceDesc.Streams[0], "/messanger.Messanger/JoinChannel", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerJoinChannelClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Messanger_JoinChannelClient interface {
+	Recv() (*ChannelMessage, error)
+	grpc.ClientStream
+}
+
+type messangerJoinChannelClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerJoinChannelClient) Recv() (*ChannelMessage, error) {
+	m := new(ChannelMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *messangerClient) StartChannel(ctx context.Context, opts ...grpc.CallOption) (Messanger_StartChannelClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Messanger_serviceDesc.Streams[1], "/messanger.Messanger/StartChannel", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerStartChannelClient{stream}
+	return x, nil
+}
+
+type Messanger_StartChannelClient interface {
+	Send(*StartChannelRequest) error
+	CloseAndRecv() (*StartChannelResponce, error)
+	grpc.ClientStream
+}
+
+type messangerStartChannelClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerStartChannelClient) Send(m *StartChannelRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *messangerStartChannelClient) CloseAndRecv() (*StartChannelResponce, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(StartChannelResponce)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *messangerClient) JoinChat(ctx context.Context, opts ...grpc.CallOption) (Messanger_JoinChatClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Messanger_serviceDesc.Streams[2], "/messanger.Messanger/JoinChat", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &messangerJoinChatClient{stream}
+	return x, nil
+}
+
+type Messanger_JoinChatClient interface {
+	Send(*Chat) error
+	Recv() (*Chat, error)
+	grpc.ClientStream
+}
+
+type messangerJoinChatClient struct {
+	grpc.ClientStream
+}
+
+func (x *messangerJoinChatClient) Send(m *Chat) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *messangerJoinChatClient) Recv() (*Chat, error) {
+	m := new(Chat)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// MessangerServer is the server API for Messanger service.
+type MessangerServer interface {
+	GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponce, error)
+	JoinChannel(*JoinChannelRequest, Messanger_JoinChannelServer) error
+	StartChannel(Messanger_StartChannelServer) error
+	JoinChat(Messanger_JoinChatServer) error
+}
+
+// UnimplementedMessangerServer can be embedded to have forward compatible implementations.
+type UnimplementedMessangerServer struct {
+}
+
+func (*UnimplementedMessangerServer) GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponce, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInfo not implemented")
+}
+func (*UnimplementedMessangerServer) JoinChannel(*JoinChannelRequest, Messanger_JoinChannelServer) error {
+	return status.Errorf(codes.Unimplemented, "method JoinChannel not implemented")
+}
+func (*UnimplementedMessangerServer) StartChannel(Messanger_StartChannelServer) error {
+	return status.Errorf(codes.Unimplemented, "method StartChannel not implemented")
+}
+func (*UnimplementedMessangerServer) JoinChat(Messanger_JoinChatServer) error {
+	return status.Errorf(codes.Unimplemented, "method JoinChat not implemented")
+}
+
+func RegisterMessangerServer(s *grpc.Server, srv MessangerServer) {
+	s.RegisterService(&_Messanger_serviceDesc, srv)
+}
+
+func _Messanger_GetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessangerServer).GetInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/messanger.Messanger/GetInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessangerServer).GetInfo(ctx, req.(*GetInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Messanger_JoinChannel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(JoinChannelRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(MessangerServer).JoinChannel(m, &messangerJoinChannelServer{stream})
+}
+
+type Messanger_JoinChannelServer interface {
+	Send(*ChannelMessage) error
+	grpc.ServerStream
+}
+
+type messangerJoinChannelServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerJoinChannelServer) Send(m *ChannelMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Messanger_StartChannel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MessangerServer).StartChannel(&messangerStartChannelServer{stream})
+}
+
+type Messanger_StartChannelServer interface {
+	SendAndClose(*StartChannelResponce) error
+	Recv() (*StartChannelRequest, error)
+	grpc.ServerStream
+}
+
+type messangerStartChannelServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerStartChannelServer) SendAndClose(m *StartChannelResponce) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *messangerStartChannelServer) Recv() (*StartChannelRequest, error) {
+	m := new(StartChannelRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Messanger_JoinChat_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MessangerServer).JoinChat(&messangerJoinChatServer{stream})
+}
+
+type Messanger_JoinChatServer interface {
+	Send(*Chat) error
+	Recv() (*Chat, error)
+	grpc.ServerStream
+}
+
+type messangerJoinChatServer struct {
+	grpc.ServerStream
+}
+
+func (x *messangerJoinChatServer) Send(m *Chat) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *messangerJoinChatServer) Recv() (*Chat, error) {
+	m := new(Chat)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _Messanger_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "messanger.Messanger",
+	HandlerType: (*MessangerServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetInfo",
+			Handler:    _Messanger_GetInfo_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "JoinChannel",
+			Handler:       _Messanger_JoinChannel_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StartChannel",
+			Handler:       _Messanger_StartChannel_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "JoinChat",
+			Handler:       _Messanger_JoinChat_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "chat.proto",
 }
