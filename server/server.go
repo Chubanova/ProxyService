@@ -1,7 +1,8 @@
 package main
 
 import (
-	"feed/feedgrpc/feed"
+	"io"
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -19,10 +20,22 @@ type messangerServer struct {
 	chat.UnimplementedMessangerServer
 }
 
+
+
+// type routeGuideServer struct {
+// 	pb.UnimplementedRouteGuideServer
+// 	savedFeatures []*pb.Feature // read-only after initialized
+
+// 	mu         sync.Mutex // protects routeNotes
+// 	routeNotes map[string][]*pb.RouteNote
+// }
+
+
 func newServer() *messangerServer {
 	s := &messangerServer{}
 	return s
 }
+
 
 func main() {
 	fmt.Print("hello world")
@@ -38,11 +51,29 @@ func main() {
 	grpcServer.Serve(lis)
 }
 
-func (s *messangerServer) GetInfo(req *feed.SubscriptionRequest, rsp FrontFeedService_SubscribeFeedServer) error {
+
+func (s *messangerServer) GetInfo(ctx context.Context, in *chat.GetInfoRequest) (*chat.GetInfoResponce, error) {
+	return &chat.GetInfoResponce{}, nil
 }
-func (s *messangerServer) JoinChannel(req *feed.SubscriptionRequest, rsp FrontFeedService_SubscribeFeedServer) error {
+func (s *messangerServer) JoinChannel( in *chat.JoinChannelRequest, rsp chat.Messanger_JoinChannelServer) error {
+	return nil
+
 }
-func (s *messangerServer) StartChannel(req *feed.SubscriptionRequest, rsp FrontFeedService_SubscribeFeedServer) error {
+func (s *messangerServer) StartChannel(req chat.Messanger_StartChannelServer) error {
+	return nil
+
 }
-func (s *messangerServer) JoinChat(req *feed.SubscriptionRequest, rsp FrontFeedService_SubscribeFeedServer) error {
+func (s *messangerServer) JoinChat(stream chat.Messanger_JoinChatServer) error {
+	for {
+		in, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if err := stream.Send(in); err != nil {
+			return err
+		}
+	}
 }
