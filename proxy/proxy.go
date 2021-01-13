@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	port = flag.Int("port", 10000, "The server port")
+	port = flag.Int("port", 10001, "The server port")
 )
 
 type messangerProxyServer struct {
@@ -68,6 +68,15 @@ func loggerFormatter() *logrus.Logger {
 }
 
 
+func buildServiceName() string {
+	host := "localhost"
+	// host := "internal-stage.mts.investments"
+	port := "10000"
+	// port := "9000"
+
+	return fmt.Sprintf("%s:%s", host, port)
+}
+
 func (s *messangerProxyServer) GetInfo(ctx context.Context, in *chat.GetInfoRequest) (*chat.GetInfoResponce, error) {
 	return &chat.GetInfoResponce{}, nil
 }
@@ -94,19 +103,18 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 
 
 	// Connect to resource
-	//resourceConn, err := grpc.Dial(buildServiceName("RESOURCE"), grpc.WithTransportCredentials(creds))
-	resourceConn, err := grpc.Dial(buildServiceName("RESOURCE"), grpc.WithInsecure())
+	chatConn, err := grpc.Dial(buildServiceName(), grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
 	// Close connection when work finished
-	defer resourceConn.Close()
+	defer chatConn.Close()
 
 	// Init client
-	res := resource.NewResourceServiceClient(resourceConn)
+	res := chat.NewMessangerClient(chatConn)
 
 	// Subscribe
-	cl, err := res.SubscribeOnChangeById(stream.Context())
+	cl, err := res.JoinChat(stream.Context())
 	if err != nil {
 		return err
 	}
@@ -124,7 +132,7 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 				msg, err := stream.Recv()
 				if err != nil {
 					if err != io.EOF {
-						log.Errorf("SubscribeOnChangeById feed stream has failed with error: %v", err.Error())
+						log.Errorf("JoinChat feed stream has failed with error: %v", err.Error())
 					}
 					syncChannel <- 1
 					return
@@ -133,7 +141,7 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 
 				err = cl.Send(msg)
 				if err != nil {
-					log.Errorf("SubscribeOnChangeById feed stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat feed stream has failed with error: %v", err.Error())
 					syncChannel <- 1
 					return
 				}
@@ -154,7 +162,7 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 			default:
 				msg, err := cl.Recv()
 				if err != nil {
-					log.Errorf("SubscribeOnChangeById resource stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat resource stream has failed with error: %v", err.Error())
 					stream.Context().Done()
 					syncChannel <- 1
 					return
@@ -163,7 +171,7 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 
 				err = stream.Send(msg)
 				if err != nil {
-					log.Errorf("SubscribeOnChangeById resource stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat resource stream has failed with error: %v", err.Error())
 					stream.Context().Done()
 					syncChannel <- 1
 					return
