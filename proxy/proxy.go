@@ -26,15 +26,6 @@ type messangerProxyServer struct {
 
 
 
-// type routeGuideServer struct {
-// 	pb.UnimplementedRouteGuideServer
-// 	savedFeatures []*pb.Feature // read-only after initialized
-
-// 	mu         sync.Mutex // protects routeNotes
-// 	routeNotes map[string][]*pb.RouteNote
-// }
-
-
 func newServer() *messangerProxyServer {
 	s := &messangerProxyServer{}
 	return s
@@ -42,7 +33,7 @@ func newServer() *messangerProxyServer {
 
 
 func main() {
-	fmt.Print("hello world")
+	fmt.Print("Start proxy service")
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
@@ -70,9 +61,7 @@ func loggerFormatter() *logrus.Logger {
 
 func buildServiceName() string {
 	host := "localhost"
-	// host := "internal-stage.mts.investments"
 	port := "10000"
-	// port := "9000"
 
 	return fmt.Sprintf("%s:%s", host, port)
 }
@@ -102,7 +91,7 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 	defer close(syncChannel)
 
 
-	// Connect to resource
+	// Connect to server
 	chatConn, err := grpc.Dial(buildServiceName(), grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -119,29 +108,29 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 		return err
 	}
 
-	// Init feed stream
+	// Init Client stream
 	go func() {
 		defer wg.Done()
 
 		for {
 			select {
 			case <-syncChannel:
-				log.Infof("Resource stream was closed. Closing feed stream...")
+				log.Infof("Server stream was closed. Closing Client stream...")
 				return
 			default:
 				msg, err := stream.Recv()
 				if err != nil {
 					if err != io.EOF {
-						log.Errorf("JoinChat feed stream has failed with error: %v", err.Error())
+						log.Errorf("JoinChat Client stream has failed with error: %v", err.Error())
 					}
 					syncChannel <- 1
 					return
 				}
-				log.Debugf("Received message from feed stream %v", msg)
+				log.Debugf("Received message from Client stream %v", msg)
 
 				err = cl.Send(msg)
 				if err != nil {
-					log.Errorf("JoinChat feed stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat Client stream has failed with error: %v", err.Error())
 					syncChannel <- 1
 					return
 				}
@@ -150,28 +139,28 @@ func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServe
 		}
 	}()
 
-	// Init resource stream
+	// Init Server stream
 	go func() {
 		defer wg.Done()
 
 		for {
 			select {
 			case <-syncChannel:
-				log.Infof("Feed stream was closed. Closing resource stream...")
+				log.Infof("Client stream was closed. Closing Server stream...")
 				return
 			default:
 				msg, err := cl.Recv()
 				if err != nil {
-					log.Errorf("JoinChat resource stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat Server stream has failed with error: %v", err.Error())
 					stream.Context().Done()
 					syncChannel <- 1
 					return
 				}
-				log.Debugf("Received message from resource stream %v", msg)
+				log.Debugf("Received message from Server stream %v", msg)
 
 				err = stream.Send(msg)
 				if err != nil {
-					log.Errorf("JoinChat resource stream has failed with error: %v", err.Error())
+					log.Errorf("JoinChat Server stream has failed with error: %v", err.Error())
 					stream.Context().Done()
 					syncChannel <- 1
 					return

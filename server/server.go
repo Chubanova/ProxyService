@@ -22,15 +22,6 @@ type messangerServer struct {
 
 
 
-// type routeGuideServer struct {
-// 	pb.UnimplementedRouteGuideServer
-// 	savedFeatures []*pb.Feature // read-only after initialized
-
-// 	mu         sync.Mutex // protects routeNotes
-// 	routeNotes map[string][]*pb.RouteNote
-// }
-
-
 func newServer() *messangerServer {
 	s := &messangerServer{}
 	return s
@@ -38,7 +29,7 @@ func newServer() *messangerServer {
 
 
 func main() {
-	fmt.Print("hello world")
+	fmt.Print("Start server chat")
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
