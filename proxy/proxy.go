@@ -77,6 +77,7 @@ func (s *messangerProxyServer) StartChannel(req chat.MessangerProxy_StartChannel
 	return nil
 
 }
+
 func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServer) error {
 	// Init logger
 	log := loggerFormatter()
