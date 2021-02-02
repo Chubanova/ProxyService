@@ -28,6 +28,62 @@ D:\Soft\protoc\bin\protoc.exe -I .\proto\ .\proto\proxy.proto --go_out=plugins=g
 	defer close(syncChannel)
 ```
 
+Следующий шаг - подключиться к серверу, проверить что нет ошибок и прописать что подключение закрывается когда функция заканчивается
+```
+	// Connect to server
+	chatConn, err := grpc.Dial(buildServiceName(), grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	// Close connection when work finished
+	defer chatConn.Close()
+```
+Инициализируем клиента и подписываемся на чат
+
+```
+	// Init client
+	res := chat.NewMessangerClient(chatConn)
+
+	// Subscribe
+	cl, err := res.JoinChat(stream.Context())
+	if err != nil {
+		return err
+	}
+```
+
+Теперь нам нужно обрабатывать приходящиие сообщения из обоих каналов - и пересылать их в соседний канал. При этом когда один из каналов прекратит работу (отпишется или получит ошибку надо уведомить и закрыть канал и закрыть всю функцию)
+для этого запустим 2 го рутины - клиентскую и серверную. Логика в них будет одинаковая поэтому рассмотрим только одну из них
+
+Сначала мы сообщаем что как только go routine закончится необходимо закрыть sync.WaitGroup, когда оба sync.WaitGroup закроются - закончится и наш основной метод
+После этого мы запускаем бесконечны цикл в котором проверяем сначала что к нам не прилетело уведомление из канала syncChannel  - если прилетело - выходим из цикла и go  routine завершается.
+```
+case <-syncChannel:
+	log.Infof("Server stream was closed. Closing Client stream...")
+	return
+```
+Если ничего в syncChannel не прилетело - получаем сообщение из канала.
+Сообщение с ошибкой - кладем сообщение в syncChannel и выходим из цикла.
+Сообщение без ошибки отправлем его клиенту. 
+Если отправилось не удачно - пишем в лог,  кладем сообщение в syncChannel и выходим из цикла.
+Как вы помните syncChannel нужен как раз для того чтоб сообщить второй go routine что нужно закрываться.
+```
+msg, err := stream.Recv()
+if err != nil {
+	if err != io.EOF {
+		log.Errorf("JoinChat Client stream has failed with error: %v", err.Error())
+	}
+	syncChannel <- 1
+	return
+}
+log.Debugf("Received message from Client stream %v", msg)
+
+err = cl.Send(msg)
+if err != nil {
+	log.Errorf("JoinChat Client stream has failed with error: %v", err.Error())
+	syncChannel <- 1
+	return
+}
+```
 
 ```
 func (s *messangerProxyServer) JoinChat(stream chat.MessangerProxy_JoinChatServer) error {
